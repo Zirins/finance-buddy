@@ -1,35 +1,52 @@
 from flask import Flask, request, jsonify
-from flash_sqlalchemy import SQLAlchemy
-
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URL'] = 'sqlite:///transactions.db' # Database file
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False =
-db = SQLAlchemy(app) #Initalize SQLAlchemy with Flask
+# Configure SQLite database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///transactions.db'  # Correct key and path
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)  # Initialize SQLAlchemy with Flask
 
-class Transaction(db.model):
+class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)        # Auto-incrementing primary primary_key
     date = db.Column(db.String(10), nullable=False)     # Transaction date (e.g., "2025-01-09")
-    amount = db.Column(db.float, nullable=False)        # Transaction amount (e.g., $19.99)
-    category = db.Column(db.String, nullable=False)     # Transaction category (e.g., "Grocery")
-    description = db.Column(db.String, nullable=True)   # Transaction description (e.g., "For dinner")
+    amount = db.Column(db.Float, nullable=False)        # Transaction amount (e.g., $19.99)
+    category = db.Column(db.String(100), nullable=False)     # Transaction category (e.g., "Grocery")
+    description = db.Column(db.String(200), nullable=True)   # Transaction description (e.g., "For dinner")
 
-# In-memory data storage
-transactions = []
+# Create the database and tables
+with app.app_context():
+    db.create_all()
+
+@app.route("/")
+def home():
+    return "SQLite with Flask is ready to go!"
+
 
 @app.route("/transactions", methods=["GET"])
 def get_transactions():
-    # Fetch all transactions
-    return jsonify(transactions)
+    # Fetch all transactions from the database
+    transactions = Transaction.query.all()
+    return jsonify([{
+    "id", t.id,
+    "date", t.date,
+    "amount", t.amount,
+    "category", t.category,
+    "description", t.description
+    } for t in transactions])
 
 @app.route("/transactions", methods=["POST"])
 def create_transaction():
-    # Add a new transaction
-    transaction = request.json
-    transaction["id"] = len(transactions) + 1  # Auto-generate a unique ID
-    transactions.append(transaction)
-    return jsonify(transaction), 201  # Return the new transaction with a 201 status code
+    data = request.json
+    new_transaction = Transaction(
+    date=data["date"]),
+    amount=data["amount"],
+    grocery=data["grocery"],
+    description=data.get("description")
+    )
+
+    db.session
 
 @app.route("/transactions/<int:transaction_id>", methods=["PUT"])
 def update_transaction(transaction_id):
