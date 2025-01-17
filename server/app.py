@@ -18,7 +18,12 @@ def create_transactions():
 def update_transactions(transactions_id):
     for transaction in transactions:
         if transactions["id"] == transactions:
-            transactions.update
+            transactions.update(request.json)
+            return jsonify(transactions)
+       return jsonify("Transaction: update failed")
 
 @app.route("/transactions", methods=["DELETE"]
 def delete_transaction(transaction_id):
+    global transactions
+    transactions = [t for t in transactions if t["id"] != transaction_id]
+    return jsonify("Message: DELETE COMPLETED")
